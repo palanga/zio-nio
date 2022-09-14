@@ -19,9 +19,29 @@ addCommandAlias(
   ";zioNio/test;examples/test"
 )
 
-val zioVersion = "2.0.0"
+val zioVersion = "2.0.1"
 
-lazy val zioNio = project
+lazy val root = project
+  .in(file("."))
+  .settings(
+    name           := "zio-nio",
+    publish / skip := true,
+//    console        := (core.jvm / Compile / console).value,
+//    unusedCompileDependenciesFilter -= moduleFilter(
+//      "org.scala-js",
+//      "scalajs-library"
+//    ),
+//    welcomeMessage
+  )
+  .aggregate(
+    zioNio.jvm,
+    zioNio.native,
+    docs,
+    examples
+  )
+//  .enablePlugins(ScalaJSPlugin)
+
+lazy val zioNio = crossProject(JVMPlatform, NativePlatform)
   .in(file("nio"))
   .settings(stdSettings("zio-nio"))
   .settings(
@@ -51,13 +71,13 @@ lazy val docs = project
     moduleName     := "zio-nio-docs",
     scalacOptions -= "-Yno-imports",
     scalacOptions -= "-Xfatal-warnings",
-    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(zioNio),
+    ScalaUnidoc / unidoc / unidocProjectFilter := inProjects(zioNio.jvm),
     ScalaUnidoc / unidoc / target              := (LocalRootProject / baseDirectory).value / "website" / "static" / "api",
     cleanFiles += (ScalaUnidoc / unidoc / target).value,
     docusaurusCreateSite     := docusaurusCreateSite.dependsOn(Compile / unidoc).value,
     docusaurusPublishGhpages := docusaurusPublishGhpages.dependsOn(Compile / unidoc).value
   )
-  .dependsOn(zioNio)
+  .dependsOn(zioNio.jvm)
   .enablePlugins(MdocPlugin, DocusaurusPlugin, ScalaUnidocPlugin)
 
 lazy val examples = project
@@ -68,4 +88,4 @@ lazy val examples = project
     moduleName     := "examples"
   )
   .settings(scala3Settings)
-  .dependsOn(zioNio)
+  .dependsOn(zioNio.jvm)
